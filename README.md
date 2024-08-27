@@ -1,12 +1,19 @@
+# Quadrotor Autopilot With Feed-Forward Control
+
+## Hello there 👋
+
+This Matlab-Simulink-deployed autopilot is designed as a replacement for the stock PX4 flight controller and guidance system. I implemented
+full-state feed-forward control together with the minimum-snap real-time trajectory guidance algorithm. 
+
 # Integration with PX4
-This work is closely related to my other project, control system deployment package for [Tilt-wing aircraft](https://github.com/YevheniiKovryzhenko/RRTV_TiltWing.git). 
+This work is closely related to my other project, the control system deployment package for [Tilt-wing aircraft](https://github.com/YevheniiKovryzhenko/RRTV_TiltWing.git). 
 This project is intended for use with my [PX4 Simulink I/O Framework](https://github.com/YevheniiKovryzhenko/PX4_SIMULINK_IO_Framework.git), and it will not work with the stock PX4.
 You may also find [KGroundControl](https://github.com/YevheniiKovryzhenko/KGroundControl.git) useful for your communication-related tasks. 
 
 Check out my tutorials on installing and configuring this framework on [YouTube](https://www.youtube.com/playlist?list=PLgxIoIw6ONumELvafBonHBceTzPIK5T5j)!
 
 # Installation 
-This is a standalone project that inlcudes the control system and only requires installation of [PX4 Simulink I/O Framework](https://github.com/YevheniiKovryzhenko/PX4_SIMULINK_IO_Framework.git), you must retrieve the control system package from any of the following repositories.
+This is a standalone project that includes the control system and only requires installation of [PX4 Simulink I/O Framework](https://github.com/YevheniiKovryzhenko/PX4_SIMULINK_IO_Framework.git), you must retrieve the control system package from any of the following repositories.
 Once done, all you need is to:
 * Run the PX4_Simulink_IO_Quadcopter_Min_Snap_FF_control.prj file from Matlab to initialize everything.
 * Use appropriate project shortcuts to launch GCS and Hardware-deployed control system.  
