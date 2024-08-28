@@ -5,6 +5,11 @@
 This Matlab-Simulink-deployed autopilot is designed as a replacement for the stock PX4 flight controller and guidance system. I implemented
 full-state feed-forward control together with the minimum-snap real-time trajectory guidance algorithm. 
 
+<p float="center">
+  <img src="git_figures/figure_8_example.gif" width="48%" />
+  <img align="right" src="git_figures/replanning_example.gif" width="48%" /> 
+</p>
+
 # Integration with PX4
 This work is closely related to my other project, the control system deployment package for [Tilt-wing aircraft](https://github.com/YevheniiKovryzhenko/RRTV_TiltWing.git). 
 This project is intended for use with my [PX4 Simulink I/O Framework](https://github.com/YevheniiKovryzhenko/PX4_SIMULINK_IO_Framework.git), and it will not work with the stock PX4.
