@@ -47,11 +47,11 @@ traj_opt = trajectory_ID.DEFAULT;
 % traj_opt = trajectory_ID.fig_8_yaw_1_slow;
 % traj_opt = trajectory_ID.fig_8_yaw_2_slow;
 % traj_opt = trajectory_ID.fig_8_yaw_1;
-% traj_opt = trajectory_ID.fig_8_yaw_2;
+traj_opt = trajectory_ID.fig_8_yaw_2;
 % traj_opt = trajectory_ID.rrt_test_1;
 % traj_opt = trajectory_ID.square_1;
 % traj_opt = trajectory_ID.square_1_slow;
-traj_opt = trajectory_ID.square_2;
+% traj_opt = trajectory_ID.square_2;
 % traj_opt = trajectory_ID.circle_1;
 % traj_opt = trajectory_ID.spiral_1;
 % traj_opt = trajectory_ID.spiral_yaw_1;
@@ -73,11 +73,12 @@ end
 %get all the extra states from the solution
 res = reconstruct_all_flat_states(res, Parameters.g, Parameters.Vehicle.D, Parameters.Vehicle.A, Parameters.Vehicle.B, Parameters.Vehicle.k_h, Parameters.Vehicle.I);
 
-p_0(:) = res.p(:,1);
+init_conditions; %we need to reset intial conditions so we don't drinft away
+p_0(:) = p_0(:) + res.p(:,1);
 v_0(:) = res.v(:,1);
 a_0(:) = res.a(:,1);
-q_0(:) = res.q(:,1);
-att_0(:) = [res.roll(1); res.pitch(1); res.yaw(1)];
+q_0(:) = quatmultiply(q_0(:)', res.q(:,1)')';
+att_0(:) = att_0(:) + [res.roll(1); res.pitch(1); res.yaw(1)];
 omega_0(:) = res.omega(:,1);
 
 save_traj2file(res,save_dir, traj_opt);

@@ -33,12 +33,16 @@
 %  ****************************************************************************/
 
 if exist('out','var') == 1
-    plot_sim_(res, save_dir, out, obstacles, Parameters);
+    if exist('obstacles','var') == 1
+        plot_sim_(res, save_dir, out, obstacles, Parameters);
+    else
+        plot_sim_(res, save_dir, out, [], Parameters);
+    end
 end
 
 function plot_sim_(res, save_dir, out, obstacles, Parameters)
     out = keep_AUTONOMOUS_only(out);
-    out = remove_datas(out, 150, 3250);
+    out = remove_datas(out, 1, 1700);
     out = remove_offset_time(out);
     pr_color = 'b';
     col_tr = {'#D95319','#77AC30','#4DBEEE'}; %color order for 3D vectors

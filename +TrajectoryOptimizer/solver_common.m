@@ -1,6 +1,6 @@
 % /****************************************************************************
 %  *
-%  *    Copyright (C) 2024  Yevhenii Kovryzhenko. All rights reserved.
+%  *    Copyright (C) 2025  Yevhenii Kovryzhenko. All rights reserved.
 %  *
 %  *    This program is free software: you can redistribute it and/or modify
 %  *    it under the terms of the GNU Affero General Public License as published by
@@ -35,29 +35,30 @@
 classdef solver_common < TrajectoryOptimizer.common
     methods (Hidden)
         function this_ = update_constraints(this_, timePoints_)
+            % Update constraints based on the provided time points
             % Ensure timePoints is a row vector
             timePoints_ = timePoints_(:)';
 
+            % Evaluate waypoints and extra boundary conditions
             [waypoints, extra_bcs] = this_.wptFnc(timePoints_ / this_.TU_input_factor);
-            waypoints = waypoints*this_.DU_input_factor;
+            waypoints = waypoints * this_.DU_input_factor;
 
+            % Offset waypoints to simplify calculations
             this_.waypoints_offset = waypoints(:,1);
             waypoints = waypoints - this_.waypoints_offset;
-            
-            % Dimension of the waypoint
-            this_.n_dim_src = size(waypoints,1);
-            % Number of waypoints
-            this_.N_wps = size(waypoints,2);
-            this_.N_segments = this_.N_wps - 1;
 
-            this_.stateSize = this_.N_COEFS*this_.N_segments;
-            
-            %check for trivial solution:
-            nontriv_dim = false(this_.n_dim_src,1);
+            % Update dimensional properties
+            this_.n_dim_src = size(waypoints, 1);
+            this_.N_wps = size(waypoints, 2);
+            this_.N_segments = this_.N_wps - 1;
+            this_.stateSize = this_.N_COEFS * this_.N_segments;
+
+            % Identify non-trivial dimensions
+            nontriv_dim = false(this_.n_dim_src, 1);
             check_bcs__ = ~isempty(extra_bcs);
             for i_dim = 1:this_.n_dim_src
-                nontriv_dim(i_dim) = any(waypoints(i_dim,:));
-                if (check_bcs__ && ~nontriv_dim(i_dim))
+                nontriv_dim(i_dim) = any(waypoints(i_dim, :));
+                if check_bcs__ && ~nontriv_dim(i_dim)
                     for i_dt = 1:min(this_.N_dt, length(extra_bcs))
                         nontriv_dim(i_dim) = ~isempty(extra_bcs{i_dt}) && any(isnan(extra_bcs{1}(1,:)));
                         if nontriv_dim(i_dim)
@@ -66,165 +67,99 @@ classdef solver_common < TrajectoryOptimizer.common
                     end
                 end
             end
-            n_nontriv_dim = nnz(nontriv_dim);
+
+            % Update non-trivial dimensions and waypoints
             this_.n_dim_ids = find(nontriv_dim);
-            this_.n_dim = n_nontriv_dim;
-            
-            % nontriv_wpts = zeros(n_nontriv_dim,N_wps);
-            this_.waypoints = waypoints(nontriv_dim,:);
+            this_.n_dim = nnz(nontriv_dim);
+            this_.waypoints = waypoints(nontriv_dim, :);
             this_.waypoints_src = waypoints;
 
-            % Re-order constraints in desired format. Note that the input is
-            % transposed before passing as arguments.
-
-            % Each column will correspond to all the constraints for each
-            % dimension. For example, for a 2D problem with 3 waypoints, and for
-            % jerk
-            % constraints = [x1 dx1 ddx1 dddx1 x2 dx2 ddx2 dddx2 x3 dx3 ddx3 dddx3;
-            %                y1 dy1 ddy1 dddy1 y2 dy2 ddy2 dddy2 y3 dy3 ddy3 dddy3]'
-            % and for snap
-            % constraints = [x1 dx1 ddx1 dddx1 ddddx1 x2 dx2 ddx2 dddx2 ddddx2 x3 dx3 ddx3 dddx3 ddddx3;
-            %                y1 dy1 ddy1 dddy1 ddddy1 y2 dy2 ddy2 dddy2 ddddy2 y3 dy3 ddy3 dddy3 ddddy3]'
-
-            % Default boundary conditions. Zero at start and end waypoints. NaN at
-            % intermediate waypoints
-            
-            n_specified_bcs = min(length(extra_bcs), this_.N_dt);
-
-            % BCs_cell = cell(1,this_.N_wps);
-            this_.constraints = zeros((this_.N_dt+1)*this_.N_wps, n_nontriv_dim);
-            if n_nontriv_dim > 0
+            % Initialize constraints matrix
+            this_.constraints = zeros((this_.N_dt + 1) * this_.N_wps, this_.n_dim);
+            if this_.n_dim > 0
+                % Populate constraints for each waypoint
                 for k = 1:this_.N_wps
-                    tmp_bcs = zeros(this_.n_dim,this_.N_dt+1);
-                    tmp_wpts = this_.waypoints(:,k);
-                    tmp_bcs(1:this_.n_dim, 1) = tmp_wpts(:);
-                    
-                    i_dt = 0;
-                    for i = 1:n_specified_bcs
-                        i_dt = i_dt + 1;
-                        % tmp_ = extra_bcs{i_dt}(this_.n_dim_ids,k) * this_.DU_input_factor / this_.TU_input_factor^i_dt;
-                        % tmp_bcs(1:this_.n_dim, i_dt+1) = tmp_(1:n_nontriv_dim,k);
-                        tmp_bcs(1:this_.n_dim, i_dt+1) = extra_bcs{i_dt}(this_.n_dim_ids,k) * this_.DU_input_factor / this_.TU_input_factor^i_dt;                        
+                    tmp_bcs = zeros(this_.n_dim, this_.N_dt + 1);
+                    tmp_bcs(:, 1) = this_.waypoints(:, k);
+
+                    % Apply specified boundary conditions
+                    for i_dt = 1:min(length(extra_bcs), this_.N_dt)
+                        tmp_bcs(:, i_dt + 1) = extra_bcs{i_dt}(this_.n_dim_ids, k) * ...
+                            this_.DU_input_factor / this_.TU_input_factor^i_dt;
                     end
-    
-                    for i = 1:this_.N_dt - n_specified_bcs
-                        if isequal(k, 1) || isequal(k,this_.N_wps)
-                            continue
-                        else
-                            tmp = nan(this_.n_dim,1);
+
+                    % Fill remaining boundary conditions with NaN for intermediate waypoints
+                    for i_dt = length(extra_bcs) + 1:this_.N_dt
+                        if k == 1 || k == this_.N_wps
+                            continue;
                         end
-                        tmp_bcs(1:this_.n_dim, i_dt+i+1) = tmp(:);
+                        tmp_bcs(:, i_dt + 1) = nan(this_.n_dim, 1);
                     end
-    
-                    % BCs_cell{k} = tmp_bcs;
-                    for i = 1:this_.n_dim
-                        for ii = 1:this_.N_dt+1
-                            this_.constraints(ii + (k-1)*(this_.N_dt+1),i) = tmp_bcs(i,ii);
+
+                    % Assign constraints to the matrix
+                    for i_dim = 1:this_.n_dim
+                        for i_dt = 1:this_.N_dt + 1
+                            this_.constraints((k - 1) * (this_.N_dt + 1) + i_dt, i_dim) = tmp_bcs(i_dim, i_dt);
                         end
                     end
                 end
-                % this_.constraints =  [BCs_cell{:}]';
-            end            
+            end
         end
 
-        % function orderedConstraints = orderConstraints(this_)
-        %     %orderedConstraints Re-order the constraints in desired format. Each column
-        %     % corresponds to constraints for a particular dimension.
-        %     %#codegen
-        % 
-        %     % Each column will correspond to all the constraints for each
-        %     % dimension. For example, for a 2D problem with 3 waypoints, and for
-        %     % jerk
-        %     % constraints = [x1 dx1 ddx1 dddx1 x2 dx2 ddx2 dddx2 x3 dx3 ddx3 dddx3;
-        %     %                y1 dy1 ddy1 dddy1 y2 dy2 ddy2 dddy2 y3 dy3 ddy3 dddy3]'
-        %     % and for snap
-        %     % constraints = [x1 dx1 ddx1 dddx1 ddddx1 x2 dx2 ddx2 dddx2 ddddx2 x3 dx3 ddx3 dddx3 ddddx3;
-        %     %                y1 dy1 ddy1 dddy1 ddddy1 y2 dy2 ddy2 dddy2 ddddy2 y3 dy3 ddy3 dddy3 ddddy3]'
-        % 
-        %     % Default boundary conditions. Zero at start and end waypoints. NaN at
-        %     % intermediate waypoints
-        %     BCDefault = [zeros(n_nontriv_dim,1) nan(n_nontriv_dim,this_.N_wps-2) zeros(n_nontriv_dim,1)];
-        % 
-        %     [~, ] = this_.wptFnc(timePoints_);
-        % 
-        %     % assign boundary conditions
-        %     BCs = repmat(BCDefault',[1,1,this_.N_dt]);
-        % 
-        %     constraints = zeros((this_.N_dt+1)*this_.N_wps,this_.n_dim);
-        % 
-        %     for k = 1:this_.N_wps
-        %         if isequal(this_.n_dim,1)
-        %             constraints((this_.N_dt+1)*(k-1)+1:(this_.N_dt+1)*k,:) = [this_.waypoints(:,k)';(squeeze(BCs(k,:,:)))];
-        %         else
-        %             constraints((this_.N_dt+1)*(k-1)+1:(this_.N_dt+1)*k,:) = [this_.waypoints(:,k)';(squeeze(BCs(k,:,:)))'];
-        %         end
-        %     end
-        %     orderedConstraints = constraints;
-        % end
-
         function [this_] = computePolyCoefAndTimeOfArrival(this_)
-            %computePolyCoefAndTimeOfArrival Compute polynomial segment coefficients and time of arrival
-            % This function computes the polynomial coefficients and the time of
-            % arrival given the cost weight, time weight, minimum segment weight,
-            % maximum segment weight and the segment order. If time optimization
-            % property is set to true, then this_ function returns the optimal polynomial
-            % coefficients and the time of arrival.
-            
-            %#codegen        
-        
-            % Initial guess for the time segment lengths when time optimization is
-            % selected
+            % Compute polynomial coefficients and time of arrival
+            % Handles both fixed-time and time-optimized cases
+
+            %#codegen
+
+            % Initial guess for time segments
             initialGuess = diff(this_.timePoints);
             if this_.timeOptim && length(initialGuess) > 1
-                % Perform time optimization and jerk minimization
+                % Perform time optimization
                 [ppMatrix, tSegments, J, exitstruct] = this_.optimize(initialGuess);
                 this_.Iterations = exitstruct.Iterations;
+
+                % Print optimization status if enabled
                 if this_.print_stats_fl
                     switch exitstruct.ExitFlag
                         case 0
-                            fprintf("Problem solved. Local minimum found, number of iterations: %i\n",int32(exitstruct.Iterations))
+                            fprintf("Problem solved. Local minimum found, iterations: %i\n", int32(exitstruct.Iterations));
                         case 1
-                            fprintf("Failed to solve the problem: time limit exceeded\n");
+                            fprintf("Failed to solve: time limit exceeded\n");
                         case 2
-                            fprintf("Local minimum possible: step size below minimum, number of iterations: %i\n",int32(exitstruct.Iterations));
+                            fprintf("Local minimum possible: step size below minimum, iterations: %i\n", int32(exitstruct.Iterations));
                         case 3
-                            fprintf("Failed to solve the problem: hessian not positive semi-definite\n");
+                            fprintf("Failed to solve: Hessian not positive semi-definite\n");
                         case 4
-                            fprintf("Failed to solve the problem: search direction invalid\n");
+                            fprintf("Failed to solve: invalid search direction\n");
                         case 5
-                            fprintf("Failed to solve the problem: iteration limit exceeded\n");
+                            fprintf("Failed to solve: iteration limit exceeded\n");
                         otherwise
-                            fprintf("Error in optimize: undefined exit flag: %i",int32(exitstruct.ExitFlag))
+                            fprintf("Error in optimization: undefined exit flag: %i\n", int32(exitstruct.ExitFlag));
                     end
                 end
+
                 this_.ExitFlag = exitstruct.ExitFlag;
-        
                 timeOfArrival = [0 cumsum(tSegments)'];
             else
-        
-                % Solve the polynomial coefficients. Since the time of arrival is
-                % specified, no time optimization or allocation is required here.
-                % The polynomial coefficients are obtained by simple matrix
-                % manipulations and inversion
+                % Solve polynomial coefficients for fixed-time case
                 [ppMatrix, J] = this_.solvePoly(initialGuess);
-            
-                % timeofArrival is same as the specified time points
                 timeOfArrival = [0 cumsum(initialGuess(:))'];
-
                 this_.Iterations = 0;
+
                 if this_.print_stats_fl
-                    fprintf("Fixed-time problem solved.\n")
+                    fprintf("Fixed-time problem solved.\n");
                 end
 
                 this_.ExitFlag = 0;
-            end            
+            end
+
+            % Update polynomial coefficients and time of arrival
             this_ = this_.pp_reverse_order(ppMatrix);
             this_.timeOfArrival = timeOfArrival / this_.TU_input_factor;
             this_.J = J;
             this_.cost_is_good = true;
-            
         end
-
 
         function [p, t, J, exitstruct] = optimize(this_, initGuess)
             %This function is for internal use only. It may be removed in the future.
@@ -289,6 +224,7 @@ classdef solver_common < TrajectoryOptimizer.common
                     % Set the constraint bounds for minimum total time
                     A11 = -eye(n); %each must be positive
                     A12 = -ones(n,1);%sum must be greater than min
+    
                     A1 = [A11, A12];
     
                     b1 = -[zeros(n,1)

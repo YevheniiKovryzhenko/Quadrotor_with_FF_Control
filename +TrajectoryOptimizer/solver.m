@@ -1,6 +1,6 @@
 % /****************************************************************************
 %  *
-%  *    Copyright (C) 2024  Yevhenii Kovryzhenko. All rights reserved.
+%  *    Copyright (C) 2025  Yevhenii Kovryzhenko. All rights reserved.
 %  *
 %  *    This program is free software: you can redistribute it and/or modify
 %  *    it under the terms of the GNU Affero General Public License as published by
@@ -32,9 +32,46 @@
 %  *
 %  ****************************************************************************/
 
+%{
+    CLASS: TrajectoryOptimizer.solver
+
+    Purpose:
+        Main class for trajectory optimization. Combines the functionalities
+        of solver_common, interface, and instantiation to provide a complete
+        trajectory optimization solution.
+
+    Usage:
+        Instantiate with required arguments for trajectory optimization.
+        This class manages input parsing, symbolic file instantiation, and
+        solver logic.
+
+    Methods:
+        - solver: Constructor for initialization.
+%}
 classdef solver < TrajectoryOptimizer.solver_common & TrajectoryOptimizer.interface & TrajectoryOptimizer.instantiation
+    %SOLVER Main class for trajectory optimization
+    %   Combines solver_common, interface, and instantiation functionalities
+    %   to provide a complete trajectory optimization solution.
+    
     methods
+        %{
+            FUNCTION: solver (constructor)
+
+            Purpose:
+                Initializes the solver by calling the constructors of the
+                parent classes (instantiation and interface).
+
+            Input:
+                varargin: Name-value pairs and required arguments for
+                          trajectory optimization.
+
+            Output:
+                this_ (object): Initialized solver object.
+        %}
         function this_ = solver(varargin)
+            % Constructor for the solver class
+            % Initializes the solver by calling the constructors of the
+            % parent classes.
             this_@TrajectoryOptimizer.instantiation;
             this_@TrajectoryOptimizer.interface(varargin{:});
         end

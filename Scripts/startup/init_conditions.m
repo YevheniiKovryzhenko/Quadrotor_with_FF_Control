@@ -44,3 +44,12 @@ att_0 = zeros(3,1);
 omega_0 = zeros(3,1);
 
 p_0(3) = -1;
+
+
+%spawn for generic airport map:
+p_0(1) = 5041.0-115;
+p_0(2) = 250;
+p_0(3) = -0.1;
+
+% att_0(:) = [0; 0; -deg2rad(90)];
+% q_0(:) = eul2quat(att_0(3:-1:1)', "ZYX");

@@ -33,6 +33,21 @@
 %  ****************************************************************************/
 
 function q_sp = bodyzToAttitude(body_z, yaw_sp)
+% This function is called as:
+%
+% function q_sp = fcn(body_z, yaw_sp)
+% body_z([1,3]) = -body_z([1,3]); 		% this is needed because of the sign assumption upstream
+% q_sp = lib.math.bodyzToAttitude(body_z, yaw_sp); %calls the function bellow with the same arguments
+% end
+%
+% Notes:
+% body_z is a vector (3,1) which is a normalized reference thrust from the controller upstream [F_x, F_y, F_z]'
+% expressed in the sudo-body frame (it is an inertial NED frame, but rotated by the current yaw angle) 
+% 
+% yaw_sp is the desired/reference/setpoint yaw angle I actually want to track. The function below merges the reference yaw
+% with the attitude corrections from the upstream controllers
+
+
 body_z_ = zeros(3,1);
 body_z_(:) = body_z(1:3);
 q_sp = zeros(1,4);

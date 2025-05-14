@@ -1,6 +1,6 @@
 % /****************************************************************************
 %  *
-%  *    Copyright (C) 2024  Yevhenii Kovryzhenko. All rights reserved.
+%  *    Copyright (C) 2025  Yevhenii Kovryzhenko. All rights reserved.
 %  *
 %  *    This program is free software: you can redistribute it and/or modify
 %  *    it under the terms of the GNU Affero General Public License as published by
@@ -32,51 +32,105 @@
 %  *
 %  ****************************************************************************/
 
-classdef interface < TrajectoryOptimizer.common %TrajectoryOptimizer.instantiation
+%{
+    CLASS: TrajectoryOptimizer.interface
+
+    Purpose:
+        Abstract interface for trajectory optimizer classes, providing
+        input parsing, scaling, and initialization logic.
+
+    Usage:
+        Subclass this interface and implement the abstract method
+        computePolyCoefAndTimeOfArrival.
+
+    Methods:
+        - computePolyCoefAndTimeOfArrival: Abstract method for subclasses.
+        - interface: Constructor for input parsing and initialization.
+        - check_input_double, check_input_fnc, check_input_bool: Static
+          utility methods for input parsing and validation.
+        - stringToChar: Static utility for string-to-char conversion.
+%}
+classdef interface < TrajectoryOptimizer.common
     methods (Abstract = true)
+        %{
+            FUNCTION: computePolyCoefAndTimeOfArrival
+
+            Purpose:
+                Abstract method to be implemented by subclasses for
+                computing polynomial coefficients and time of arrival.
+
+            Output:
+                this_ (object): Updated object with computed trajectory.
+        %}
         this_ = computePolyCoefAndTimeOfArrival(this_)
     end
-    methods 
-        function this_ = interface(timePoints, varargin)
-            % this_@TrajectoryOptimizer.instantiation;
 
+    methods 
+        %{
+            FUNCTION: interface (constructor)
+
+            Purpose:
+                Handles input parsing, scaling, and initialization for
+                trajectory optimizer objects.
+
+            Input:
+                timePoints: Vector of time points for waypoints.
+                varargin: Name-value pairs for configuration.
+
+            Output:
+                this_ (object): Initialized object.
+        %}
+        function this_ = interface(timePoints, varargin)
             %#codegen
-            narginchk(2,1+9*2)
+            narginchk(2, 1 + 9 * 2);
             numInputArgs = nargin;
 
-            % Convert strings to chars case by case for codegen support
-            charInputs = this_.stringToChar(numInputArgs,varargin{:});
+            % Convert strings to chars for codegen support
+            charInputs = this_.stringToChar(numInputArgs, varargin{:});
 
-            % Scaling factors:
-            this_.DU_input_factor = this_.check_input_double(charInputs,'DU',this_.DU_input_factor);
-            this_.TU_input_factor = this_.check_input_double(charInputs,'TU',this_.TU_input_factor);
+            % Scaling factors
+            this_.DU_input_factor = this_.check_input_double(charInputs, 'DU', this_.DU_input_factor);
+            this_.TU_input_factor = this_.check_input_double(charInputs, 'TU', this_.TU_input_factor);
 
             % Ensure timePoints is a row vector
             this_.timePoints = timePoints(:)' * this_.TU_input_factor;
             
-            % Parse extra inputs:
-            this_.timeOptim = this_.check_input_bool(charInputs,'TimeAllocation',this_.timeOptim);
-            this_.print_stats_fl = this_.check_input_bool(charInputs,'ShowDetails',this_.print_stats_fl);
-            this_.wptFnc = this_.check_input_fnc(charInputs, 'WaypointFunction',this_.wptFnc);
+            % Parse additional inputs
+            this_.timeOptim = this_.check_input_bool(charInputs, 'TimeAllocation', this_.timeOptim);
+            this_.print_stats_fl = this_.check_input_bool(charInputs, 'ShowDetails', this_.print_stats_fl);
+            this_.wptFnc = this_.check_input_fnc(charInputs, 'WaypointFunction', this_.wptFnc);
             if this_.timeOptim
-                this_.constrFnc = this_.check_input_fnc(charInputs, 'TimeConstraintFunction',this_.constrFnc);
+                this_.constrFnc = this_.check_input_fnc(charInputs, 'TimeConstraintFunction', this_.constrFnc);
                 if isempty(this_.constrFnc)
-                    minSegmentTimeDefault = 0.5*min(diff(timePoints(:)'));
-                    maxSegmentTimeDefault = 1.5*max(diff(timePoints(:)'));
-                    this_.minSegmentTime = this_.check_input_double(charInputs,'MinSegmentTime',minSegmentTimeDefault) * this_.TU_input_factor;
-                    this_.maxSegmentTime = this_.check_input_double(charInputs,'MaxSegmentTime',maxSegmentTimeDefault) * this_.TU_input_factor;
+                    % Default segment time constraints
+                    minSegmentTimeDefault = 0.5 * min(diff(timePoints(:)'));
+                    maxSegmentTimeDefault = 1.5 * max(diff(timePoints(:)'));
+                    this_.minSegmentTime = this_.check_input_double(charInputs, 'MinSegmentTime', minSegmentTimeDefault) * this_.TU_input_factor;
+                    this_.maxSegmentTime = this_.check_input_double(charInputs, 'MaxSegmentTime', maxSegmentTimeDefault) * this_.TU_input_factor;
                 end
-                this_.timeWt = this_.check_input_double(charInputs,'TimeWeight',this_.timeWt);
+                this_.timeWt = this_.check_input_double(charInputs, 'TimeWeight', this_.timeWt);
             end
             
-
-            % Compute the polynomial segment coefficients and time of arrival
+            % Compute polynomial coefficients and time of arrival
             this_ = this_.computePolyCoefAndTimeOfArrival;
         end
     end    
 
     methods (Static = true, Hidden = true)
+        %{
+            FUNCTION: check_input_double
 
+            Purpose:
+                Parses a double input from name-value pairs.
+
+            Input:
+                charInputs: Cell array of input arguments.
+                check_str: Name of the parameter to check.
+                def: Default value.
+
+            Output:
+                value (double): Parsed value or default.
+        %}
         function value = check_input_double(charInputs,check_str,def)
             %#codegen
             %coder.varsize('value',1);
@@ -104,6 +158,20 @@ classdef interface < TrajectoryOptimizer.common %TrajectoryOptimizer.instantiati
             end
         end
 
+        %{
+            FUNCTION: check_input_fnc
+
+            Purpose:
+                Parses a function handle input from name-value pairs.
+
+            Input:
+                charInputs: Cell array of input arguments.
+                check_str: Name of the parameter to check.
+                def: Default value.
+
+            Output:
+                value (function_handle): Parsed value or default.
+        %}
         function value = check_input_fnc(charInputs,check_str,def)
             %#codegen
             % coder.varsize('value',1);
@@ -131,6 +199,20 @@ classdef interface < TrajectoryOptimizer.common %TrajectoryOptimizer.instantiati
             end
         end
         
+        %{
+            FUNCTION: check_input_bool
+
+            Purpose:
+                Parses a boolean input from name-value pairs.
+
+            Input:
+                charInputs: Cell array of input arguments.
+                check_str: Name of the parameter to check.
+                def: Default value.
+
+            Output:
+                value (logical): Parsed value or default.
+        %}
         function value = check_input_bool(charInputs,check_str,def)
             %#codegen
             coder.varsize('value',1);
@@ -158,8 +240,19 @@ classdef interface < TrajectoryOptimizer.common %TrajectoryOptimizer.instantiati
             end
         end
         
-        
+        %{
+            FUNCTION: stringToChar
 
+            Purpose:
+                Converts string inputs to char arrays for codegen support.
+
+            Input:
+                nargin: Number of input arguments.
+                varargin: Input arguments.
+
+            Output:
+                charInputs: Cell array of char arrays.
+        %}
         function charInputs = stringToChar(nargin,varargin)
             %charInputs Convert strings to chars case by case for codegen support
             

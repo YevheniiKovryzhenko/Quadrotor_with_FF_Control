@@ -36,11 +36,8 @@ function move_3D(t,p,q, animation_3D, ...
     write_gif, FolderName, fig, pause_dt)
 
 n = length(t);
-% animation_3D = lib.visual3D.create_body_NED(fig, p(:,1), scaling);
-% animation_3D = lib.visual3D.create_quadcopter_NED(fig, p(:,1), scaling);
 
 ax = gca(fig);
-% axis(ax,'equal')
 view(ax,-45,20)
 
 if write_gif
@@ -49,8 +46,7 @@ if write_gif
     if ~exist(FolderName, 'dir')
        mkdir(FolderName)
     end
-    dt_gif = 0.02;
-    % dt_gif = 0.1;
+    dt_gif = max(0.02, pause_dt);
     
     lib.gif.start(fig,FigNames_gif,dt_gif)
 

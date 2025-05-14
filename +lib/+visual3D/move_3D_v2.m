@@ -53,7 +53,6 @@ if update_wpts
 end
 
 ax = gca(fig);
-% axis(ax,'equal')
 view_elevation_deg = 60;
 view(ax,-45,view_elevation_deg)
 
@@ -66,7 +65,6 @@ if write_gif
        mkdir(FolderName)
     end
     dt_gif = max(0.02, pause_dt);
-    % dt_gif = 0.1;
     
     lib.gif.start(fig,FigNames_gif,dt_gif)
 

@@ -34,29 +34,41 @@
 
 % environment params
 
-Parameters.simulink.AU_LAT_DEG = 32.6099;
-Parameters.simulink.AU_LONG_DEG = 85.4808;
-Parameters.simulink.AU_ALT_M = 214;
-
 Parameters.g = 9.81;
+Parameters.rho = 1.225;
 
-Parameters.simulink.EN_ACT_MODEL = true;
-Parameters.simulink.EN_ACT_DELAY_MODEL = true;
+Parameters.Simulink.EN_ACT_MODEL = true;
+Parameters.Simulink.EN_ACT_DELAY_MODEL = true;
 
-Parameters.simulink.EN_AERO_MODEL = true;
+Parameters.Simulink.EN_AERO_MODEL = true;
+
+%% Global Position:
+%Auburn, Alabama:
+Parameters.GlobalPosition.REF_LAT_DEG = 32.6099;
+Parameters.GlobalPosition.REF_LONG_DEG = 85.4808;
+Parameters.GlobalPosition.REF_ALT_M = 214;
+
+%% Sensors:
+
+%will need to make these part of Parameters.Sensors structure
+ForwardVelocityCutoff = 3;
+SensorAAFiltNum = 4.386e+06;
+SensorAAFiltDen = [1 2.96e+03 4.386e+06];
+ReferenceFilterNum = 0.04877;
+ReferenceFilterDen = [1 -0.9512];
 
 %% wind model:
-Parameters.simulink.EN_WIND_MODEL = true;
+Parameters.Simulink.EN_WIND_MODEL = true;
 
-Parameters.simulink.wind_dir_deg = 38; %wind dirrection at 6 m  (degrees clockwise from north)
-Parameters.simulink.wind_speed = 1; %wind speed at 6 m defines the low-altitide intensity (m/s)
+Parameters.Simulink.wind_dir_deg = 38; %wind dirrection at 6 m  (degrees clockwise from north)
+Parameters.Simulink.wind_speed = 1; %wind speed at 6 m defines the low-altitide intensity (m/s)
 
 %dryden wind turbulence model:
-Parameters.simulink.wind_scale_length = 100; %scale length at medium/high altitude(m)
-Parameters.simulink.wind_ref_wing_span = 0.3; %m
-Parameters.simulink.wind_noise = 0.1; %band limited noise and discrete filter sample time (sec)
-Parameters.simulink.wind_noise_seeds = [23341 23342 23343 23344]; %Noise seeds [ug vg wg pg]
+Parameters.Simulink.wind_scale_length = 100; %scale length at medium/high altitude(m)
+Parameters.Simulink.wind_ref_wing_span = 0.3; %m
+Parameters.Simulink.wind_noise = 0.1; %band limited noise and discrete filter sample time (sec)
+Parameters.Simulink.wind_noise_seeds = [23341 23342 23343 23344]; %Noise seeds [ug vg wg pg]
 
 %horizontal wind model:
-Parameters.simulink.wind_dir_alt_deg = 55;
-Parameters.simulink.wind_speed_alt = 3;
+Parameters.Simulink.wind_dir_alt_deg = 55;
+Parameters.Simulink.wind_speed_alt = 3;

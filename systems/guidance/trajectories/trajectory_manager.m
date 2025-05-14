@@ -352,7 +352,7 @@ classdef trajectory_manager < handle %#codegen
 
         function [wpts, obst, Tf, dt_eval, wptFnc] = traj_line_y_obst_1
             wpts = zeros(4,7);
-            wpts(3,:) = -1;
+            wpts(3,:) = -2;
             wpts(2,:) = [-2, -1.5, -1, 0, 1, 1.5, 2];
             
             dt_eval = 0.01; %s
@@ -595,7 +595,7 @@ classdef trajectory_manager < handle %#codegen
         
         function [wpts, obst, Tf, dt_eval, wptFnc] = def_traj
             wpts = zeros(4,2);
-            wpts(3,:) = -1;
+            wpts(3,:) = -2;
             
             dt_eval = 0.01; %s
             Tf = 10;     

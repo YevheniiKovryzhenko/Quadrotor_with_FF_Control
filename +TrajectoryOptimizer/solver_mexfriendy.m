@@ -1,6 +1,6 @@
 % /****************************************************************************
 %  *
-%  *    Copyright (C) 2024  Yevhenii Kovryzhenko. All rights reserved.
+%  *    Copyright (C) 2025  Yevhenii Kovryzhenko. All rights reserved.
 %  *
 %  *    This program is free software: you can redistribute it and/or modify
 %  *    it under the terms of the GNU Affero General Public License as published by
@@ -32,8 +32,46 @@
 %  *
 %  ****************************************************************************/
 
-classdef solver_mexfriendy < TrajectoryOptimizer.solver_common %really just a quick shortcut for later use
+%{
+    CLASS: TrajectoryOptimizer.solver_mexfriendy
+
+    Purpose:
+        Provides a simplified, MEX-compatible solver for trajectory
+        optimization, with streamlined input/output for code generation.
+
+    Usage:
+        Instantiate with required parameters for trajectory optimization.
+        Designed for use in MEX or codegen environments.
+
+    Methods:
+        - solver_mexfriendy: Constructor for initialization.
+%}
+classdef solver_mexfriendy < TrajectoryOptimizer.solver_common
+    %SOLVER_MEXFRIENDY A simplified solver for MEX compatibility
+    %   Provides a streamlined interface for trajectory optimization
+    %   with MEX-friendly inputs and outputs.
+    
     methods 
+        %{
+            FUNCTION: solver_mexfriendy (constructor)
+
+            Purpose:
+                Initializes the MEX-friendly solver with provided parameters.
+
+            Input:
+                timePoints: Vector of time points for waypoints.
+                TimeAllocation: Boolean, enable time allocation optimization.
+                ShowDetails: Boolean, print optimization details.
+                WaypointFunction: Function handle for waypoints.
+                TimeConstraintFunction: Function handle for time constraints.
+                MinSegmentTime: Minimum segment time(s).
+                MaxSegmentTime: Maximum segment time(s).
+                TimeWeight: Weight for time in cost function.
+                TU: Time unit scaling factor.
+
+            Output:
+                this_ (object): Initialized solver object.
+        %}
         function this_ = solver_mexfriendy(...
                 timePoints, ...
                 TimeAllocation, ...
@@ -44,15 +82,18 @@ classdef solver_mexfriendy < TrajectoryOptimizer.solver_common %really just a qu
                 MaxSegmentTime, ...
                 TimeWeight, ...
                 TU)
+            % Constructor for the MEX-friendly solver
+            % Initializes the solver with the provided parameters.
 
             %#codegen
 
+            % Set the time unit scaling factor
             this_.TU_input_factor = TU;
 
-            % Ensure timePoints is a row vector
+            % Ensure timePoints is a row vector and scale by TU
             this_.timePoints = timePoints(:)' * this_.TU_input_factor;
             
-            % Parse extra inputs:
+            % Parse additional inputs
             this_.timeOptim = TimeAllocation;
             this_.print_stats_fl = ShowDetails;
             this_.wptFnc = WaypointFunction;
@@ -60,7 +101,6 @@ classdef solver_mexfriendy < TrajectoryOptimizer.solver_common %really just a qu
             this_.minSegmentTime = MinSegmentTime * this_.TU_input_factor;
             this_.maxSegmentTime = MaxSegmentTime * this_.TU_input_factor;
             this_.timeWt = TimeWeight;
-            
 
             % Compute the polynomial segment coefficients and time of arrival
             this_ = this_.computePolyCoefAndTimeOfArrival;            

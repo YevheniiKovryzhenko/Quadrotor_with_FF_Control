@@ -35,8 +35,8 @@
 function plt_settings = start(plt_settings,data)
     % set(0, 'DefaultAxesFontSize', plt_settings.fnt_s, 'DefaultAxesFontWeight','bold')
     % set(0, 'DefaultTextFontSize', plt_settings.fnt_s, 'DefaultTextFontWeight','bold')
-    set(0, 'DefaultAxesFontSize', plt_settings.fnt_s)
-    set(0, 'DefaultTextFontSize', plt_settings.fnt_s)
+    set(0, 'DefaultAxesFontSize', plt_settings.fnt_s, 'DefaultTextFontWeight', 'normal')
+    set(0, 'DefaultTextFontSize', plt_settings.fnt_s, 'DefaultTextFontWeight', 'normal')
 
     pos             = [50 50 1200 1200];
 
